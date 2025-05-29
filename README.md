@@ -148,4 +148,6 @@ fincli/
 * **ECB FX rates**: European Central Bank public data
 * **TradeRepublic exports**: pytr community tool ([https://github.com/pytr-org/pytr](https://github.com/pytr-org/pytr))
 * **BINGX exports**: https://bingx.com/es-es/transaction-history
+
+
 Feel free to contribute new parsers, processors, models, or outputs via pull requests!
