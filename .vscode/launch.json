@@ -1,0 +1,36 @@
+// .vscode/launch.json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug FinCLI (module)",
+      "type": "debugpy",
+      "request": "launch",
+      // VS Code will do `python -m fincli.cli --config ...`
+      "module": "fincli.cli",
+      "args": [
+        "--config", "${workspaceFolder}/config.yaml"
+      ],
+      // make sure Python can find your `fincli/` folder
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true
+    },
+
+    {
+      "name": "Debug FinCLI (script)",
+      "type": "debugpy",
+      "request": "launch",
+      // run the file directly instead of as a module
+      "program": "${workspaceFolder}/fincli/cli.py",
+      "args": [
+        "--config", "${workspaceFolder}/config.yaml"
+      ],
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      },
+      "justMyCode": true
+    }
+  ]
+}

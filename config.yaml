@@ -1,0 +1,29 @@
+# top-level: YAML anchors let you mix & match easily
+parsers:
+  - name: tr
+    type: fincli.parsers.TradeRepublicParser
+    params:
+      data_dir: rawData/tradeRepublic          
+    
+  - name: bingx
+    type: fincli.parsers.BingxParser
+    params:
+      path: rawData/bingX
+      fx_csv: utilsData/eurofxref-hist.csv
+
+processors:
+  - name: savings
+    type: fincli.processors.SavingPerformanceProcessor
+    params:
+      year: 2024
+
+  - name: trading
+    type: fincli.processors.TradingPerformanceProcessor
+    params:
+      year: 2024
+    
+
+output:
+  type: fincli.output.HtmlReportOutput
+  params:
+    out_file: report.html
