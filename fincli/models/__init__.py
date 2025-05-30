@@ -42,6 +42,9 @@ class Money(BaseModel):
         eur_amount = eur_amount.quantize(Decimal("0.01"))
 
         return Money(amount=eur_amount, currency="EUR")
+    
+    def __str__(self):
+        return f"{self.amount:.2f} {self.currency}"
 
     
 
@@ -58,10 +61,10 @@ class BuyOperation(BaseModel):
     date: datetime
 
     def __str__(self):
-        base = (f"Bought {str(self.quantity)} × {self.asset.name} @ {str(self.unit_price.amount)} {self.unit_price.currency}"
+        base = (f"Bought {str(self.quantity)} × {self.asset.name} @ {str(self.unit_price)}"
                 f" on {self.date.date().isoformat()}")
         if self.commission:
-            base += f" (commission: {str(self.commission.amount)} {self.commission.currency})"
+            base += f" (commission: {str(self.commission)})"
         return base
 
 class SellOperation(BaseModel):
@@ -73,10 +76,10 @@ class SellOperation(BaseModel):
     date: datetime
 
     def __str__(self):
-        base = (f"Sold  {self.quantity} × {self.asset} @ {self.unit_price}"
+        base = (f"Sold {str(self.quantity)} × {self.asset.name} @ {str(self.unit_price)}"
                 f" on {self.date.date().isoformat()}")
         if self.commission:
-            base += f" (commission: {self.commission})"
+            base += f" (commission: {str(self.commission)})"
         return base
 
 class Dividend(BaseModel):
@@ -84,19 +87,21 @@ class Dividend(BaseModel):
     asset: Asset
     gross: Money
     date: datetime
+    source: str | None = None  # e.g. "Savings account", "Staking rewards"
 
     def __str__(self):
-        return (f"Dividend of {self.gross} from {self.asset}"
-                f" on {self.date.date().isoformat()}")
+        return (f"Dividend of {str(self.gross)} from {self.asset.name}"
+                f" on {self.date.date().isoformat()} from {self.source or 'Unknown source'}")
 
 class Interest(BaseModel):
     class__: Literal["Interest"] = Field("Interest", Literal=True)
     gross: Money
     date: datetime
+    source: str | None = None  # e.g. "Savings account", "Staking rewards"
 
     def __str__(self):
         return (f"Interest payment of {self.gross}"
-                f" on {self.date.date().isoformat()}")
+                f" on {self.date.date().isoformat()} from {self.source or 'Unknown source'}")
 
 class AssetTrade(BaseModel):
     class__: Literal["AssetTrade"] = Field("AssetTrade", Literal=True)
@@ -150,6 +155,8 @@ class AssetPNL(BaseModel):
     asset: Asset
     pnl: Money
     trades: list[AssetTrade]
+    total_buy_eur: Decimal
+    total_sell_eur: Decimal
 
 
 class TradingPerformanceOut(BaseModel):
@@ -181,3 +188,32 @@ class BingxParserConfig(BaseModel):
     glob: str = "*.csv"
     encoding: str = "utf-8"
     sep: str = ";"
+
+class BinanceParserConfig(BaseModel):
+    """
+    Configuration for BinanceParser:
+      - trades_path: file or directory containing trade CSVs
+      - savings_path: file or directory containing savings/rewards CSVs
+      - glob: filename pattern when a directory is specified
+      - encoding: file encoding (default UTF-8)
+      - sep: CSV separator (default comma)
+    """
+    trades_path: str
+    savings_path: str
+    glob: str = "*.csv"
+    encoding: str = "utf-8"
+    sep: str = ","
+
+
+class BitGetParserConfig(BaseModel):
+    """
+    Configuration for BitGetParser:
+      - path: file or directory containing CSVs
+      - glob: filename pattern (default *.csv)
+      - encoding: file encoding (default utf-8)
+      - sep: delimiter (either ';' or ',')
+    """
+    path: str
+    glob: str = "*.csv"
+    encoding: str = "utf-8"
+    sep: str = ";" 

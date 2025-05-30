@@ -71,6 +71,7 @@ class TradeRepublicParser(AbstractParser):
                         asset=Asset(name=note, isin=isin),
                         gross=Money(amount=abs(amount), currency="EUR"),
                         date=date,
+                        source="TR"
                     )
                 )
             elif kind == "Intereses":
@@ -78,6 +79,7 @@ class TradeRepublicParser(AbstractParser):
                     Interest(
                         gross=Money(amount=abs(amount), currency="EUR"),
                         date=date,
+                        source="TR"
                     )
                 )
             else:  # silently ignore unknowns, or raise

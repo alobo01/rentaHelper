@@ -52,8 +52,13 @@ def run(cfg_path: str | Path):
     for pr_conf in cfg["processors"]:
         proc_cls: type[AbstractProcessor] = _import(pr_conf["type"])
         processor = proc_cls(**pr_conf.get("params", {}))
-        in_model = proc_cls.input_model(operations=all_ops)
+        in_model = proc_cls.input_model(operations=copy.deepcopy(all_ops))
         results.append(processor.process(in_model))
+
+    for r in results:
+        if isinstance(r, TradingPerformanceOut):
+            # in-place sort descending by absolute P/L
+            r.summary.sort(key=lambda row: abs(row.pnl.amount), reverse=True)
 
     # 4. output
     out_conf = cfg["output"]

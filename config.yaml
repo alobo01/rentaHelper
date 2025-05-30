@@ -11,6 +11,21 @@ parsers:
       path: rawData/bingX
       fx_csv: utilsData/eurofxref-hist.csv
 
+  - name: binance
+    type: fincli.parsers.BinanceParser
+    params:
+      trades_path: rawData/binance/trades
+      savings_path: rawData/binance/rewards
+      glob: "*.csv"
+      sep: ","
+      
+  - name: bitget
+    type: fincli.parsers.BitGetParser
+    params:
+      path: rawData/bitget
+      glob: "*.csv"
+      sep: ";"
+
 processors:
   - name: savings
     type: fincli.processors.SavingPerformanceProcessor

@@ -1,6 +1,8 @@
 from collections import defaultdict, deque
 from decimal import Decimal
 
+import pandas as pd
+
 from ..models import (
     Asset, TradingPerformanceIn, TradingPerformanceOut,
     BuyOperation, SellOperation, AssetTrade,
@@ -26,9 +28,13 @@ class TradingPerformanceProcessor(AbstractProcessor):
             lambda: AssetPNL(
                 asset=Asset(name="Undefined", isin="UN0000000000", ticker="UN0000000000"),
                 pnl=Money(amount=Decimal(0), currency="EUR"),
-                trades=[]
+                trades=[],
+                total_buy_eur=Decimal(0),
+                total_sell_eur=Decimal(0),
             )
         )
+
+        
 
         # Stream operations chronologically
         sorted_ops = sorted(data.operations, key=lambda o: o.date)
@@ -65,11 +71,55 @@ class TradingPerformanceProcessor(AbstractProcessor):
                     pnl_record.trades.append(trade)
                     pnl_record.pnl.amount += pnl_amount
 
+
+                    # **accumulate gross buy/sell**
+                    pnl_record.total_buy_eur += buy_px * match_qty
+                    pnl_record.total_sell_eur += sell_px * match_qty
+
                     # Update remaining quantities
                     buy_lot.quantity -= match_qty
                     qty_to_match -= match_qty
                     if buy_lot.quantity == 0:
                         buys[asset_key].popleft()
+
+
+        # Build per-ticker totals
+        summary_by_ticker: dict[str, dict[str, Decimal]] = defaultdict(lambda: {
+            "realized_pnl": Decimal(0),
+            "matched_qty": Decimal(0),
+            "unmatched_qty": Decimal(0),
+            "trade_count": 0
+        })
+
+        # 1) Aggregate realized P&L and matched quantities
+        for asset_pnl in output.values():           # output is your dict[str,AssetPNL]
+            t = asset_pnl.asset.ticker
+            rec = summary_by_ticker[t]
+            rec["realized_pnl"] += asset_pnl.pnl.amount
+            rec["trade_count"] = len(asset_pnl.trades)
+            # Sum up how many units were matched (from the sell side)
+            rec["matched_qty"] += sum(trade.sell.quantity for trade in asset_pnl.trades)
+            for t in asset_pnl.trades:
+                if pd.isnull(t.buy.date):
+                    print(t.buy)
+
+
+        # 2) Tally up any remaining open buys
+        for t, queue in buys.items():
+            rec = summary_by_ticker[t]
+            rec["unmatched_qty"] = sum(lot.quantity for lot in queue)
+
+        # 3) (Optional) Convert your defaultdict back to a plain dict
+        final_summary = dict(summary_by_ticker)
+
+        # Print the final summary
+        for ticker, stats in final_summary.items():
+            if stats['unmatched_qty']>0:
+                print(f"{ticker} | "
+                    f"Realized P&L: {stats['realized_pnl']:8.2f} EUR | "
+                    f"Matched Qty: {stats['matched_qty']:6}   | "
+                    f"Unmatched Qty: {stats['unmatched_qty']:6}   | "
+                    f"Trades: {stats['trade_count']}")
 
         return TradingPerformanceOut(
             year=self.year,
