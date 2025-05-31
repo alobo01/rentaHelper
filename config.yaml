@@ -26,6 +26,20 @@ parsers:
       glob: "*.csv"
       sep: ";"
 
+  - name: revolut
+    type: fincli.parsers.RevolutParser
+    params:
+      path: rawData/revolut
+      glob: "*.csv"
+      sep: ";"
+
+  - name: xtb
+    type: fincli.parsers.XTBParser
+    params:
+      cash_file: rawData/XTB/cashOperations.csv
+      trades_file: rawData/XTB/tradeOperations.csv
+      sep: ";"
+
 processors:
   - name: savings
     type: fincli.processors.SavingPerformanceProcessor

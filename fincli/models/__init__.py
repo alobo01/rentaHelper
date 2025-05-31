@@ -47,7 +47,7 @@ class Money(BaseModel):
         return f"{self.amount:.2f} {self.currency}"
 
     
-
+ZERO_EUR = Money(amount=Decimal(0), currency="EUR")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Financial Operations
@@ -73,6 +73,7 @@ class SellOperation(BaseModel):
     unit_price: Money
     quantity: Decimal
     commission: Money | None = None
+    tax: Money = ZERO_EUR
     date: datetime
 
     def __str__(self):
@@ -87,6 +88,7 @@ class Dividend(BaseModel):
     asset: Asset
     gross: Money
     date: datetime
+    tax: Money = ZERO_EUR
     source: str | None = None  # e.g. "Savings account", "Staking rewards"
 
     def __str__(self):
@@ -97,6 +99,7 @@ class Interest(BaseModel):
     class__: Literal["Interest"] = Field("Interest", Literal=True)
     gross: Money
     date: datetime
+    tax: Money = ZERO_EUR
     source: str | None = None  # e.g. "Savings account", "Staking rewards"
 
     def __str__(self):
@@ -115,6 +118,8 @@ class AssetTrade(BaseModel):
             f"{self.sell}\n"
             f"→ PnL: {self.pnl}"
         )
+    
+
 
 # Discriminated union
 FinOp = Annotated[
@@ -217,3 +222,29 @@ class BitGetParserConfig(BaseModel):
     glob: str = "*.csv"
     encoding: str = "utf-8"
     sep: str = ";" 
+
+class RevolutParserConfig(BaseModel):
+    """
+    Configuration for RevolutParser:
+      - path: file or directory containing Revolut CSVs
+      - glob: filename pattern when a directory is specified (default '*.csv')
+      - encoding: file encoding (default 'utf-8')
+      - sep: CSV delimiter (default ';')
+    """
+    path: str
+    glob: str = "*.csv"
+    encoding: str = "utf-8"
+    sep: str = ";"
+
+class XTBParserConfig(BaseModel):
+    """
+    Configuration for XTBParser:
+      - cash_file:   path to cashOperations.csv
+      - trades_file: path to tradeOperations.csv
+      - encoding:    file encoding (default 'utf-8')
+      - sep:         delimiter (default ';')
+    """
+    cash_file: str
+    trades_file: str
+    encoding: str = "utf-8"
+    sep: str = ";"
