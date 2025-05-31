@@ -45,7 +45,7 @@ class RevolutParser(AbstractParser):
         files = [path] if path.is_file() else list(path.glob(self.config.glob))
 
         # temp store: key -> dict with date, gross, tax
-        grouped = defaultdict(lambda: {"date": None, "gross": Decimal(0), "tax": Decimal(0)})
+        grouped = defaultdict(lambda: [])
 
         for f in files:
             text = f.read_text(encoding=self.config.encoding)
@@ -63,32 +63,39 @@ class RevolutParser(AbstractParser):
                     continue
 
                 # Determine key: use description without trailing ' Tax'
-                key_desc = desc.replace(" Tax", "").strip()
-
-                entry = grouped[key_desc]
+                # key_desc = desc.replace(" Tax", "").strip()
+                entry = grouped[str(dt)]
+                # entry = grouped[key_desc]
                 # record date from the non-tax line (first occurrence)
-                if entry["date"] is None and "Interest" in desc:
-                    entry["date"] = dt
 
-                # gross vs tax
-                if "Tax" in desc:
-                    entry["tax"] += abs(val)
-                else:
-                    entry["gross"] += val
+                entry.append({
+                    "source": desc,
+                    "val": val,
+                })
 
-                grouped[key_desc] = entry
+              
 
         # build model instances
         records: list[FinOp] = []
-        for source, vals in grouped.items():
-            if vals["date"] is None:
+        for date, vals in grouped.items():
+            
+            if len(vals) == 1 and ("WITHDRAWN" in vals[0]["source"] or "Reinvested" in vals[0]["source"] or "BUY EUR" in vals[0]["source"] or "SELL EUR" in vals[0]["source"]):
                 continue
+
+            if len(vals)!=2 and not "Interest PAID" in vals[0]["source"] :
+                pass
+            gross = sum(map(lambda x: x["val"] if "Interest PAID" in x["source"] else 0, vals))
+            tax = sum(map(lambda x: x["val"] if "Tax" in x["source"] else 0, vals))
+            fee = sum(map(lambda x: x["val"] if "Fee" in x["source"] else 0, vals))
+            net = gross - fee
+            
             records.append(
                 Interest(
-                    gross=Money(amount=vals["gross"], currency="EUR"),
-                    tax=Money(amount=vals["tax"], currency="EUR"),
-                    date=vals["date"],
-                    source=source
+                    gross=Money(amount=net, currency="EUR"),
+                    tax=Money(amount=tax, currency="EUR"),
+                    commission=Money(amount=fee, currency="EUR"),
+                    date=date,
+                    source="Revolut Savings"
                 )
             )
 

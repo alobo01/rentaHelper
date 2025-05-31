@@ -37,7 +37,7 @@ class TradingPerformanceProcessor(AbstractProcessor):
         
 
         # Stream operations chronologically
-        sorted_ops = sorted(data.operations, key=lambda o: o.date)
+        sorted_ops = sorted(data.operations, key=lambda o: (o.date, o.class__))
         for op in sorted_ops:
             if isinstance(op, BuyOperation):
                 key = op.asset.isin or op.asset.name
@@ -45,6 +45,8 @@ class TradingPerformanceProcessor(AbstractProcessor):
 
             elif isinstance(op, SellOperation) and op.date.year == self.year:
                 asset_key = op.asset.isin or op.asset.name
+                if asset_key=="Cardano":
+                    print(f"Processing SellOperation for {asset_key} on {op.date}")
                 qty_to_match = op.quantity
 
                 # Ensure we have an entry for this key
@@ -59,7 +61,7 @@ class TradingPerformanceProcessor(AbstractProcessor):
 
                     buy_px = buy_lot.unit_price.amount
                     sell_px = op.unit_price.amount
-                    pnl_amount = (sell_px - buy_px) * match_qty
+                    pnl_amount = (sell_px - buy_px) * match_qty - op.commission.amount
 
                     trade = AssetTrade(
                         buy=buy_lot,

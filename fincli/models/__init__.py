@@ -100,6 +100,7 @@ class Interest(BaseModel):
     gross: Money
     date: datetime
     tax: Money = ZERO_EUR
+    commission: Money = ZERO_EUR
     source: str | None = None  # e.g. "Savings account", "Staking rewards"
 
     def __str__(self):
