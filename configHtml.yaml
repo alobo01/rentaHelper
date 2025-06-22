@@ -60,7 +60,7 @@ processors:
     
 
 output:
-  type: fincli.output.PdfReportOutput
+  type: fincli.output.HtmlReportOutput
   params:
   
-    out_file: report.pdf
+    out_file: report2.html

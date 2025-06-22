@@ -6,6 +6,7 @@ from .binance import BinanceParser
 from .bitget import BitGetParser
 from .revolut import RevolutParser
 from .xtb import XTBParser
+from .manual_interest import ManualInterestParser
 
 __all__ = ["AbstractParser", "TradeRepublicParser", "BingxParser", "BinanceParser", "BitGetParser"]
-__all__ += ["RevolutParser", "XTBParser"]
+__all__ += ["RevolutParser", "XTBParser", "ManualInterestParser"]

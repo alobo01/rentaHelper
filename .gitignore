@@ -1,3 +1,4 @@
 *.csv
 *.pyc
-report.html
+report*.html
+report*.pdf

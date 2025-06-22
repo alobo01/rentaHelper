@@ -249,3 +249,16 @@ class XTBParserConfig(BaseModel):
     trades_file: str
     encoding: str = "utf-8"
     sep: str = ";"
+
+class ManualInterestParserConfig(BaseModel):
+    """
+    Configuration for ManualInterestParser:
+      - path: file or directory containing manual interest CSVs
+      - glob: filename pattern (default '*.csv')
+      - encoding: file encoding (default 'utf-8')
+      - sep: delimiter (default ';')
+    """
+    path: str
+    glob: str = "*.csv"
+    encoding: str = "utf-8"
+    sep: str = ";"

@@ -111,7 +111,7 @@ class XTBParser(AbstractParser):
         Interest_types = {"Free-funds Interest", "Free-funds Interest Tax"}
         Dividend_types = {"DIVIDENT", "Withholding Tax"}
         Important_types = Interest_types | Dividend_types
-        print(types_set)
+        # print(types_set)
         for date, entry_list in grouped.items():
             # 1) Skip if there are no interest/dividend entries at all
             if all(x["type"] not in Important_types for x in entry_list):
@@ -121,13 +121,12 @@ class XTBParser(AbstractParser):
             gross_interest = sum(
                 x["amount"] 
                 for x in entry_list 
-                if x["type"] in Interest_types and "Tax" not in x["type"]
-            )
-            tax_interest = sum(
+                if x["type"] in Interest_types and "Tax" not in x["type"]            )
+            tax_interest = abs(sum(
                 x["amount"] 
                 for x in entry_list 
                 if x["type"] in Interest_types and "Tax" in x["type"]
-            )
+            ))
             if gross_interest > 0:
                 records.append(
                     Interest(

@@ -45,10 +45,10 @@ class TradingPerformanceProcessor(AbstractProcessor):
 
             elif isinstance(op, SellOperation) and op.date.year == self.year:
                 asset_key = op.asset.isin or op.asset.name
-                if asset_key=="Cardano":
-                    print(f"Processing SellOperation for {asset_key} on {op.date}")
-                qty_to_match = op.quantity
+                comission = op.commission.amount if op.commission else Decimal(0)
 
+                qty_to_match = op.quantity
+                
                 # Ensure we have an entry for this key
                 pnl_record = output[asset_key]
                 if pnl_record.asset.isin == "UN0000000000":
@@ -61,7 +61,7 @@ class TradingPerformanceProcessor(AbstractProcessor):
 
                     buy_px = buy_lot.unit_price.amount
                     sell_px = op.unit_price.amount
-                    pnl_amount = (sell_px - buy_px) * match_qty - op.commission.amount
+                    pnl_amount = (sell_px - buy_px) * match_qty - comission
 
                     trade = AssetTrade(
                         buy=buy_lot,
